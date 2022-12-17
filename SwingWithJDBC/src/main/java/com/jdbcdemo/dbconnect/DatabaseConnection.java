@@ -4,9 +4,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 
 public class DatabaseConnection {
-
+	
 	public static Connection getDbConnection() {
-
 		Connection connection = null;
 
 		try {
@@ -19,9 +18,6 @@ public class DatabaseConnection {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-
 		return connection;
-
 	}
-
 }

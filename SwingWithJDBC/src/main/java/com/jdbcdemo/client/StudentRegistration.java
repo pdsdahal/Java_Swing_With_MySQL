@@ -3,6 +3,9 @@ package com.jdbcdemo.client;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
@@ -10,6 +13,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -19,6 +23,9 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
+
+import com.jdbcdemo.model.Student;
+import com.jdbcdemo.serviceimpl.StudentServiceImpl;
 
 public class StudentRegistration extends JFrame {
 
@@ -90,6 +97,10 @@ public class StudentRegistration extends JFrame {
 		contentPane.add(getBtnDelete());
 		contentPane.add(getBtnUpdate());
 		contentPane.add(getBtnExit());
+
+		populateData();
+		
+		setVisible(true);
 	}
 
 	private JPanel getPanel() {
@@ -316,6 +327,81 @@ public class StudentRegistration extends JFrame {
 	private JButton getBtnSave() {
 		if (btnSave == null) {
 			btnSave = new JButton("SAVE");
+			btnSave.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+
+					if (txtFirstName.getText().equals("") || txtFirstName.getText() == null) {
+						JOptionPane.showMessageDialog(contentPane, "FirstName is required.");
+						return;
+					}
+
+					if (txtLastName.getText().equals("") || txtLastName.getText() == null) {
+						JOptionPane.showMessageDialog(contentPane, "LastName is required.");
+						return;
+					}
+
+					if (txtRollNo.getText().equals("") || txtRollNo.getText() == null) {
+						JOptionPane.showMessageDialog(contentPane, "RollNo is required.");
+						return;
+					}
+
+					if (txtPhoneNo.getText().equals("") || txtPhoneNo.getText() == null) {
+						JOptionPane.showMessageDialog(contentPane, "PhoneNo is required.");
+						return;
+					}
+
+					if (txtAddress.getText().equals("") || txtAddress.getText() == null) {
+						JOptionPane.showMessageDialog(contentPane, "Address is required.");
+						return;
+					}
+
+					String year = cmBoxYear.getSelectedItem().toString();
+					String month = cmBoxMonth.getSelectedItem().toString();
+					String day = cmBoxDay.getSelectedItem().toString();
+
+					if (year.equals("YYYY") || month.equals("MM") || day.equals("DD")) {
+						JOptionPane.showMessageDialog(contentPane, "Please select your dob.");
+						return;
+					}
+
+					Student student2 = new Student();
+					student2.setfName(txtFirstName.getText());
+					student2.setmName(txtMiddleName.getText());
+					student2.setlName(txtLastName.getText());
+					student2.setAddress(txtAddress.getText());
+					String dob = year + "-" + month + "-" + day;
+					student2.setDob(dob);
+
+					if (rdbtnFemale.isSelected()) {
+						student2.setGender("Female");
+					} else if (rdbtnMale.isSelected()) {
+						student2.setGender("Male");
+					} else {
+						student2.setGender("Other");
+					}
+
+					student2.setPhoneNo(txtPhoneNo.getText());
+					student2.setRollNo(Integer.parseInt(txtRollNo.getText()));
+
+					StudentServiceImpl impl = new StudentServiceImpl();
+					int result = impl.addStudent(student2);
+					if (result > 0) {
+						JOptionPane.showMessageDialog(contentPane, "Data Inserted Successfully!");
+						txtFirstName.setText("");
+						txtLastName.setText("");
+						txtAddress.setText("");
+						txtRollNo.setText("");
+						txtPhoneNo.setText("");
+						cmBoxYear.setSelectedIndex(0);
+						cmBoxMonth.setSelectedIndex(0);
+						cmBoxDay.setSelectedIndex(0);
+						txtMiddleName.setText("");
+
+						populateData();
+					}
+
+				}
+			});
 			btnSave.setFont(new Font("Tahoma", Font.BOLD | Font.ITALIC, 16));
 			btnSave.setBounds(578, 208, 89, 23);
 		}
@@ -340,11 +426,45 @@ public class StudentRegistration extends JFrame {
 		return table;
 	}
 
-	
+	private void populateData() {
+
+		StudentServiceImpl impl = new StudentServiceImpl();
+		List<Student> studentList = impl.getStudents();
+
+		DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
+		tableModel.setRowCount(0);
+
+		for (Student std : studentList) {
+
+			tableModel.addRow(new Object[] { std.getSid(), std.getfName(), std.getmName(), std.getlName(),
+					std.getGender(), std.getAddress(), std.getPhoneNo(), std.getRollNo(), std.getDob() });
+		}
+
+	}
 
 	private JButton getBtnView() {
 		if (btnView == null) {
 			btnView = new JButton("View");
+			btnView.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					
+					
+					int selectedRow = table.getSelectedRow();
+
+					if (selectedRow < 0) {
+						JOptionPane.showMessageDialog(contentPane, "Please select any row!");
+						return;
+					}
+
+					int sid = (int) table.getModel().getValueAt(selectedRow, 0);
+
+					StudentServiceImpl impl = new StudentServiceImpl();
+					Student student = impl.getStudent(sid);
+					new ViewStudent().setDataInForm(student);
+					dispose();
+					
+				}
+			});
 			btnView.setFont(new Font("Tahoma", Font.BOLD | Font.ITALIC, 16));
 			btnView.setBounds(10, 491, 89, 23);
 		}
@@ -354,6 +474,29 @@ public class StudentRegistration extends JFrame {
 	private JButton getBtnDelete() {
 		if (btnDelete == null) {
 			btnDelete = new JButton("Delete");
+			btnDelete.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+
+					int selectedRow = table.getSelectedRow();
+
+					if (selectedRow < 0) {
+						JOptionPane.showMessageDialog(contentPane, "Please select any row!");
+						return;
+					}
+
+					int sid = (int) table.getModel().getValueAt(selectedRow, 0);
+
+					StudentServiceImpl impl = new StudentServiceImpl();
+					String message = impl.deleteStudent(sid);
+					if (message != null) {
+						JOptionPane.showMessageDialog(contentPane, message);
+						populateData();
+					} else {
+						JOptionPane.showMessageDialog(contentPane, "Failed to Delete!");
+					}
+
+				}
+			});
 			btnDelete.setFont(new Font("Tahoma", Font.BOLD | Font.ITALIC, 16));
 			btnDelete.setBounds(128, 491, 89, 23);
 		}
@@ -363,6 +506,23 @@ public class StudentRegistration extends JFrame {
 	private JButton getBtnUpdate() {
 		if (btnUpdate == null) {
 			btnUpdate = new JButton("Update");
+			btnUpdate.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+				
+					int selectedRow = table.getSelectedRow();
+
+					if (selectedRow < 0) {
+						JOptionPane.showMessageDialog(contentPane, "Please select any row!");
+						return;
+					}
+
+					int sid = (int) table.getModel().getValueAt(selectedRow, 0);
+					new UpdateStudent().setDataInForm(sid);
+					dispose();
+					
+				
+				}
+			});
 			btnUpdate.setFont(new Font("Tahoma", Font.BOLD | Font.ITALIC, 16));
 			btnUpdate.setBounds(260, 491, 122, 23);
 		}
@@ -372,6 +532,11 @@ public class StudentRegistration extends JFrame {
 	private JButton getBtnExit() {
 		if (btnExit == null) {
 			btnExit = new JButton("Exit");
+			btnExit.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					System.exit(0);
+				}
+			});
 			btnExit.setFont(new Font("Tahoma", Font.BOLD | Font.ITALIC, 16));
 			btnExit.setBounds(443, 491, 89, 23);
 		}

@@ -3,6 +3,8 @@ package com.jdbcdemo.client;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -10,6 +12,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+
+import com.jdbcdemo.model.Student;
 
 public class ViewStudent extends JFrame {
 
@@ -234,9 +238,28 @@ public class ViewStudent extends JFrame {
 		return txtDob;
 	}
 	
+	public void setDataInForm(Student student) {
+		
+		txtFirstName.setText(student.getfName());
+		txtMiddleName.setText(student.getmName());
+		txtLastName.setText(student.getlName());
+		txtRollNo.setText(String.valueOf(student.getRollNo()));
+		txtGender.setText(student.getGender());
+		txtPhoneNo.setText(student.getPhoneNo());
+		txtAddress.setText(student.getAddress());
+		txtDob.setText(student.getDob());
+	}
+	
 	private JButton getBtnBack() {
 		if (btnBack == null) {
 			btnBack = new JButton("Back");
+			btnBack.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					
+					new StudentRegistration();
+					dispose();
+				}
+			});
 			btnBack.setFont(new Font("Tahoma", Font.BOLD | Font.ITALIC, 16));
 			btnBack.setBounds(22, 420, 89, 23);
 		}
